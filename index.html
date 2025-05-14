@@ -81,7 +81,7 @@
         output.textContent = JSON.stringify(subjectSelections, null, 2);
 
         // Send to SheetDB API
-        fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_API_ID', {
+        fetch('https://sheetdb.io/api/v1/8kzgssyt9klzb', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ data: subjectSelections })
