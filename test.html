@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Subject Preference Grid</title>
+  <style>
+    table { border-collapse: collapse; margin: 20px 0; width: 100%; }
+    td, th { padding: 10px; text-align: center; border: 1px solid #ccc; }
+    th { background-color: #f2f2f2; }
+    .error { color: red; margin-top: 10px; }
+    button { padding: 10px 20px; font-size: 16px; }
+    pre { background-color: #f8f8f8; border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Subject Preference Selection</h2>
+  <form id="preferenceForm">
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>1st Preference</th>
+          <th>2nd Preference</th>
+          <th>3rd Preference</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Generate 25 subjects -->
+      </tbody>
+    </table>
+    <button type="submit">Submit</button>
+    <div class="error" id="error"></div>
+  </form>
+
+  <h3>Submitted Preferences:</h3>
+  <pre id="output"></pre>
+
+  <script>
+    const tbody = document.querySelector('tbody');
+    for (let i = 1; i <= 25; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>Subject ${i}</td>
+        <td><input type="radio" name="subject${i}" value="1" data-subject="${i}" data-pref="1"></td>
+        <td><input type="radio" name="subject${i}" value="2" data-subject="${i}" data-pref="2"></td>
+        <td><input type="radio" name="subject${i}" value="3" data-subject="${i}" data-pref="3"></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    document.getElementById('preferenceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const selectedPrefs = {};
+      const subjectSelections = {};
+      const inputs = document.querySelectorAll('input[type="radio"]:checked');
+
+      let isValid = true;
+      let errorMsg = '';
+
+      inputs.forEach(input => {
+        const pref = input.getAttribute('data-pref');
+        const subj = input.getAttribute('data-subject');
+
+        if (selectedPrefs[pref]) {
+          isValid = false;
+          errorMsg = `Each preference can be assigned to only one subject. Preference ${pref} is selected more than once.`;
+        } else {
+          selectedPrefs[pref] = subj;
+          subjectSelections[`Subject ${subj}`] = `${pref} Preference`;
+        }
+      });
+
+      const errorDiv = document.getElementById('error');
+      const output = document.getElementById('output');
+
+      if (!isValid) {
+        errorDiv.textContent = errorMsg;
+        output.textContent = '';
+      } else {
+        errorDiv.textContent = '';
+        output.textContent = JSON.stringify(subjectSelections, null, 2);
+
+        // Send to SheetDB API
+        fetch('https://sheetdb.io/api/v1/YOUR_SHEETDB_API_ID', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: subjectSelections })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert("Form submitted and response stored successfully!");
+        })
+        .catch(error => {
+          console.error('Error storing to SheetDB:', error);
+          alert("Form submitted but failed to store data to SheetDB.");
+        });
+      }
+    });
+  </script>
+</body>
+</html>
